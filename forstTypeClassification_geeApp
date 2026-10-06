@@ -1,15 +1,15 @@
 /**** Start of imports. If edited, may not auto-convert in the playground. ****/
-var L1_test = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L1_test"),
-    L1_train = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L1_train"),
-    L2_test = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L2_test"),
-    L2_train = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L2_train"),
-    XGLL = ee.FeatureCollection("users/liruonan02/forestTypeClassification/ROI/region_XGLL"),
-    mask_L1 = ee.Image("users/liruonan02/forestTypeClassification/sample/L1_mask"),
-    forest2010 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/forest2010"),
-    fromglc2015 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/fromglc2015"),
-    glc_fcs2015_L2 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2015_L2"),
-    glc_fcs2020_L2 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2020_L2"),
-    mcd12q1 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/mcd12q1");
+var L1_test = "users/liruonan02/forestTypeClassification/sample/L1_test",
+    L1_train = "users/liruonan02/forestTypeClassification/sample/L1_train",
+    L2_test = "users/liruonan02/forestTypeClassification/sample/L2_test",
+    L2_train = "users/liruonan02/forestTypeClassification/sample/L2_train",
+    XGLL = "users/liruonan02/forestTypeClassification/ROI/region_XGLL",
+    mask_L1 = "users/liruonan02/forestTypeClassification/sample/L1_mask",
+    forest2010 = "users/liruonan02/forestTypeClassification/otherForestProducts/forest2010",
+    fromglc2015 = "users/liruonan02/forestTypeClassification/otherForestProducts/fromglc2015",
+    glc_fcs2015_L2 = "users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2015_L2",
+    glc_fcs2020_L2 = "users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2020_L2",
+    mcd12q1 = "users/liruonan02/forestTypeClassification/otherForestProducts/mcd12q1";
 /***** End of imports. If edited, may not auto-convert in the playground. *****/
  
 /**===============================require========================================== **/
