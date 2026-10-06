@@ -426,11 +426,11 @@ app.createHelpers = function(){
     var options = {all:false,fullscreenControl: true,mapTypeControl:false,zoomControl: false,layerList:true};
     var product_OPTIONS = {
       'This study':{classification:app.classifyRF()},
-      'Forest2010':{classification:forest2010},
-      'FROMGLC2015':{classification:fromglc2015},
-      'GLC_FCS2015':{classification:glc_fcs2015_L2},
-      'GLC_FCS2020':{classification:glc_fcs2020_L2},
-      'MCD12Q1':{classification:mcd12q1.select('mcd12_2017')}
+      'Forest2010':{classification:ee.Image(forest2010)},
+      'FROMGLC2015':{classification:ee.Image(fromglc2015)},
+      'GLC_FCS2015':{classification:ee.Image(glc_fcs2015_L2)},
+      'GLC_FCS2020':{classification:ee.Image(glc_fcs2020_L2)},
+      'MCD12Q1':{classification:ee.Image(mcd12q1).select('mcd12_2017')}
       }
     var productName = Object.keys(product_OPTIONS)
    
@@ -769,13 +769,19 @@ app.createConstants = function(){
           nameR: 'XGLL',
           abre: 'XGLL',
           description: 'Shangri-La (XGLL)',
-          roi: XGLL
+          roi: ee.FeatureCollection(XGLL)
         }
     };
-  app.mask_OPTIONS = {L1:mask_L1};
+  app.mask_OPTIONS = {L1:ee.Image(mask_L1)};
   app.sample_OPTIONS = {
-    L1:{trainSample:L1_train,testSample:L1_test},
-    L2:{trainSample:L2_train,testSample:L2_test},
+    L1:{
+      trainSample:ee.FeatureCollection(L1_train),
+      testSample:ee.FeatureCollection(L1_test)
+    },
+    L2:{
+      trainSample:ee.FeatureCollection(L2_train),
+      testSample:ee.FeatureCollection(L2_test)
+    },
   }
   app.img_OPTIONS = {
     'spring':{description:'spring'},
