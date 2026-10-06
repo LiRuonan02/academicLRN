@@ -80,12 +80,14 @@ preProcess.nir_swir1 = function(img){
 
 preProcess.main = function(start,end,region,setName){
   setName = setName || "bands"
+  var regionCollection = ee.FeatureCollection(region);
+  var regionGeometry = regionCollection.geometry();
   var bandNames = ee.List(["blue","green","red","nir","swir1","swir2"]);
   var sensor_band_dict =ee.Dictionary({
                         L8 : ee.List([1,2,3,4,5,6])
   });
  var col = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
-           .filterBounds(region)
+           .filterBounds(regionGeometry)
            .filterDate(start,end)
            .map(preProcess.addTimeProperty)
            .map(preProcess.maskL8sr)

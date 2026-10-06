@@ -8,10 +8,12 @@ var dataAccess = {}
 /* Temperature data*/
   // data filter
 dataAccess.monthTemperatureMean = function (startDate,endDate,region){
+var regionCollection = ee.FeatureCollection(region);
+var regionGeometry = regionCollection.geometry();
 var lxCol = ee.ImageCollection('MODIS/006/MYD11A2')
                 .select('LST_Day_1km')
                 .filter(ee.Filter.date(startDate,endDate))
-                .filterBounds(region);
+                .filterBounds(regionGeometry);
 /* caculate monthly average temperature*/
 var monthList = ee.List.sequence(1, 12);
 var monthMean = ee.ImageCollection.fromImages(monthList.map(function(month){
@@ -20,7 +22,7 @@ var monthMean = ee.ImageCollection.fromImages(monthList.map(function(month){
     img = img.set("month",month);
     return img;
 })).map(function(img){
-  img = img.clip(region)//.geometry())
+  img = img.clipToCollection(regionCollection)
  return img.multiply(0.02).subtract(273.15).float().copyProperties(img);
 }).sort("month")
 
@@ -35,7 +37,7 @@ var newNames = names.map(function(name){
   newname = newname.cat(month)
   return newname;
 });
-  mean= mean.rename(newNames).clipToBoundsAndScale({geometry:ee.FeatureCollection(region).geometry(),scale:1000});
+  mean= mean.rename(newNames).clipToBoundsAndScale({geometry:regionGeometry,scale:1000});
   return mean;
 }
 

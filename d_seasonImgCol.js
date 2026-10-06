@@ -41,6 +41,7 @@ seasonImgCol.msImgCol = function(imgCol,way){
 
 /* fill pixel with hole*/
 seasonImgCol.fillHole = function(imgCol,region,way){
+  var regionCollection = ee.FeatureCollection(region);
   var value = [];
   if (way==="median") {value = imgCol.median()}
   else if (way==="min") {value = imgCol.min()}
@@ -50,7 +51,8 @@ seasonImgCol.fillHole = function(imgCol,region,way){
   imgCol = imgCol.map(function(img){
       var season = img.getString("season");
       var mask = ee.Image(img.unmask());
-      var output = ee.Image(value).where(mask,img).clip(region);
+      var output = ee.Image(value).where(mask,img)
+                           .clipToCollection(regionCollection);
       return output.set("season",season);
   })
   return imgCol;

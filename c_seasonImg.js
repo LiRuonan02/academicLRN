@@ -28,11 +28,13 @@ seasonImg.msImg = function(region,start,end,setName) {
 
 /* fill pixel with hole*/
 seasonImg.fillHole = function(imgCol,region){
+  var regionCollection = ee.FeatureCollection(region);
   var median = imgCol.median();
   imgCol = imgCol.map(function(img){
       var season = img.getString("season");
       var mask = ee.Image(img.unmask());
-      var output = median.where(mask,img).clip(region);
+      var output = median.where(mask,img)
+                         .clipToCollection(regionCollection);
       return output.set("season",season);
   })
   return imgCol;
