@@ -1,15 +1,15 @@
 /**** Start of imports. If edited, may not auto-convert in the playground. ****/
-var L1_test = "users/liruonan02/forestTypeClassification/sample/L1_test",
-    L1_train = "users/liruonan02/forestTypeClassification/sample/L1_train",
-    L2_test = "users/liruonan02/forestTypeClassification/sample/L2_test",
-    L2_train = "users/liruonan02/forestTypeClassification/sample/L2_train",
-    XGLL = "users/liruonan02/forestTypeClassification/ROI/region_XGLL",
-    mask_L1 = "users/liruonan02/forestTypeClassification/sample/L1_mask",
-    forest2010 = "users/liruonan02/forestTypeClassification/otherForestProducts/forest2010",
-    fromglc2015 = "users/liruonan02/forestTypeClassification/otherForestProducts/fromglc2015",
-    glc_fcs2015_L2 = "users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2015_L2",
-    glc_fcs2020_L2 = "users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2020_L2",
-    mcd12q1 = "users/liruonan02/forestTypeClassification/otherForestProducts/mcd12q1";
+var L1_test = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L1_test"),
+    L1_train = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L1_train"),
+    L2_test = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L2_test"),
+    L2_train = ee.FeatureCollection("users/liruonan02/forestTypeClassification/sample/L2_train"),
+    XGLL = ee.FeatureCollection("users/liruonan02/forestTypeClassification/ROI/region_XGLL"),
+    mask_L1 = ee.Image("users/liruonan02/forestTypeClassification/sample/L1_mask"),
+    forest2010 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/forest2010"),
+    fromglc2015 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/fromglc2015"),
+    glc_fcs2015_L2 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2015_L2"),
+    glc_fcs2020_L2 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/glc_fcs2020_L2"),
+    mcd12q1 = ee.Image("users/liruonan02/forestTypeClassification/otherForestProducts/mcd12q1");
 /***** End of imports. If edited, may not auto-convert in the playground. *****/
  
 /**===============================require========================================== **/
@@ -25,6 +25,24 @@ var dataAccess = require("users/liruonan02/forestTypeClassification:function/a_d
 var app = {};
 
 app.createHelpers = function(){
+  app.getDateRange = function() {
+      var start = app.dateFilter.startDate.getValue();
+      var end = app.dateFilter.endDate.getValue();
+      var isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+      if (!isoDatePattern.test(start) || !isoDatePattern.test(end)) {
+          throw new Error('Start and end dates must use the YYYY-MM-DD format.');
+      }
+      if (start > end) {
+          throw new Error('The start date must not be later than the end date.');
+      }
+
+      return {
+          start: ee.Date.parse('YYYY-MM-dd', start),
+          end: ee.Date.parse('YYYY-MM-dd', end)
+      };
+  };
+
   app.setLoadingMode = function(enabled) {
         // Set each of the widgets to the given enabled mode.
         var loadDependentWidgets = [
@@ -44,23 +62,40 @@ app.createHelpers = function(){
         loadDependentWidgets.forEach(function(widget) {
             widget.setDisabled(enabled);
         });
+        app.dateFilter.loadingLabel.setValue('Loading...');
+        app.dateFilter.loadingLabel.style().set({
+            shown: enabled,
+            color: 'gray'
+        });
     };
     
   app.applyCompositeImg = function(){
+      var dateRange = app.getDateRange();
       app.setLoadingMode(true);
       var region = app.ROI_OPTIONS[app.roi.select.getValue()].roi;
-      var start = app.dateFilter.startDate.getValue();
-      if (start) start = ee.Date(start);
-      var end = app.dateFilter.endDate.getValue();
-      if (end) end = ee.Date(end);
-      var bandsCol = seasonImgCol.main(region,start,end,"bands","median");
-      var indexCol = seasonImgCol.main(region,start,end,"index","median");
+      var bandsCol = seasonImgCol.main(
+          region, dateRange.start, dateRange.end, "bands", "median");
+      var indexCol = seasonImgCol.main(
+          region, dateRange.start, dateRange.end, "index", "median");
       //get season list:[spring,summer,autumn,winter]
       var computedIds = bandsCol.reduceColumns(ee.Reducer.toList(), ['season'])
                               .get('list');
-    computedIds.evaluate(function(ids) {
-      // Update the image picker with the given list of ids.
+    computedIds.evaluate(function(ids, error) {
       app.setLoadingMode(false);
+      if (error) {
+        app.dateFilter.loadingLabel.setValue('Failed: ' + error);
+        app.dateFilter.loadingLabel.style().set({shown: true, color: 'red'});
+        return;
+      }
+      if (!ids || ids.length === 0) {
+        app.dateFilter.loadingLabel.setValue(
+            'No seasonal composites were generated for this date range.');
+        app.dateFilter.loadingLabel.style().set({shown: true, color: 'red'});
+        return;
+      }
+
+      app.dateFilter.loadingLabel.style().set('shown', false);
+      // Update the image picker with the given list of ids.
       app.feaPicker.Ref.select.items().reset(ids);
       app.feaPicker.VI.select.items().reset(ids);
       // Default the image picker to the first id.
@@ -113,13 +148,11 @@ app.createHelpers = function(){
     
     /***************** environment factors ********************************/
     var region = app.ROI_OPTIONS[app.roi.select.getValue()].roi;
-    var start = app.dateFilter.startDate.getValue();
-    if (start) start = ee.Date(start);
-    var end = app.dateFilter.endDate.getValue();
-    if (end) end = ee.Date(end);
+    var dateRange = app.getDateRange();
     var terrain = dataAccess.DEM(region);
     var preci = dataAccess.monthPrecip(region);
-    var temp = dataAccess.monthTemperatureMean(start,end,region);
+    var temp = dataAccess.monthTemperatureMean(
+        dateRange.start, dateRange.end, region);
     
     if(app.feaPicker.applyDEM.getValue()) classImg = classImg.addBands(terrain);
     if(app.feaPicker.applyTemp.getValue()) classImg = classImg.addBands(temp);
@@ -543,8 +576,16 @@ app.createPanels = function(){
     app.roi.select.setValue(app.roi.select.items().get(0));
     
     app.dateFilter = {
-        startDate: ui.Textbox('YYYY-MM-DD', '2017-01-01',app.HELPER_TEXT_STYLE),
-        endDate: ui.Textbox('YYYY-MM-DD', '2017-12-31',app.HELPER_TEXT_STYLE),
+        startDate: ui.Textbox({
+            placeholder: 'YYYY-MM-DD',
+            value: '2017-01-01',
+            style: app.HELPER_TEXT_STYLE
+        }),
+        endDate: ui.Textbox({
+            placeholder: 'YYYY-MM-DD',
+            value: '2017-12-31',
+            style: app.HELPER_TEXT_STYLE
+        }),
         applyButton: ui.Button('Generate Four Seasonal Composites', app.applyCompositeImg),
         loadingLabel: ui.Label({
             value: 'Loading...',
@@ -724,7 +765,12 @@ app.createConstants = function(){
                   position:'middle-left',
 };
   app.ROI_OPTIONS = {
-        'XGLL': {nameR: 'XGLL',abre: 'XGLL',roi: XGLL}
+        'XGLL': {
+          nameR: 'XGLL',
+          abre: 'XGLL',
+          description: 'Shangri-La (XGLL)',
+          roi: XGLL
+        }
     };
   app.mask_OPTIONS = {L1:mask_L1};
   app.sample_OPTIONS = {
