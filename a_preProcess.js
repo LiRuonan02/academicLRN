@@ -11,7 +11,7 @@ preProcess.scale = function(img){
 /* add Time Property to image*/
 preProcess.addTimeProperty = function(img) {
     var time = img.get('system:time_start');
-    return img.set('time',ee.Date(time));
+    return img.set('time', time);
 }
 
 preProcess.maskL8sr = function (image) {
@@ -28,9 +28,9 @@ preProcess.maskL8sr = function (image) {
  *  spring:3,4,5; summer:6,7,8; autumn:9,10,11;winter:12,1,2
  **/
 preProcess.addSeasonProb = function (img){
-    var date  = ee.Date(img.get('time'));
-    var month = date.get('month');
-    var year  = date.get('year');
+    var date = ee.String(img.get('DATE_ACQUIRED'));
+    var month = ee.Number.parse(date.slice(5, 7));
+    var year = date.slice(0, 4);
     var season;
 
     /**traditional seasons*/
@@ -41,9 +41,9 @@ preProcess.addSeasonProb = function (img){
     season = ee.Algorithms.If(month.gte(12), ee.String("winter"), season);
 
     return img.set('season', season)
-              .set('Year', year.format())
+              .set('Year', year)
               .set('Month', month.format("%02d"))
-              .set('YearMonth', date.format('YYYY-MM'));
+              .set('YearMonth', date.slice(0, 7));
 }
 
 preProcess.vegIndices = function(img){
