@@ -38,8 +38,8 @@ app.createHelpers = function(){
       }
 
       return {
-          start: ee.Date.parse('YYYY-MM-dd', start),
-          end: ee.Date.parse('YYYY-MM-dd', end)
+          start: ee.Date(start),
+          end: ee.Date(end)
       };
   };
 
